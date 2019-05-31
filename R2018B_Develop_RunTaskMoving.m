@@ -62,16 +62,16 @@ end
 Full_stim = Stim_set{1}.Full_stim;
 Full_Duration = Stim_set{1}.Duration;
 
-%% Scrambling to come (though can probably just do the same way we did before...
+%% Scrambling  (just do the same way we did before...)
 
-scrambled = -1;  %Set to one to create discontinuous base stimuli
+scrambled = 1;  %Set to one to create discontinuous base stimuli
 
 
 
 if scrambled >0
     status = 's'
-    pull_foldername = 'Trial_2'; %for file name put number trial and initialize of participant
-    pull_filename = '26-Feb-2019_Loop1_C_Stim_set.mat'; %put the file name in based on the date.
+    pull_foldername = 'Trial_1'; %for file name put number trial and initialize of participant
+    pull_filename = '15-Mar-2019_Loop1_C_Stim_set.mat'; %put the file name in based on the date.
 
     load(['C:\Users\ronwd\Desktop\MATLAB\PsychoPhysicsWithYale\Run_task_RWD_v2\Trials\' pull_foldername  '\' pull_filename])
     
@@ -445,7 +445,7 @@ axis off
 
 %As noted elsewhere, repeat this process three times to play clean clip
 %since only get 100s of clean playing, (300s = 5 minutes)
-%% FIRST PLAY!
+% FIRST PLAY!
 leftFilter = dsp.FIRFilter('NumeratorSource','Input port');
 rightFilter = dsp.FIRFilter('NumeratorSource','Input port');
 
@@ -549,7 +549,7 @@ release(deviceWriter)
 release(leftFilter)
 release(rightFilter)
 
-%% THIRD PLAY!
+% THIRD PLAY!
 leftFilter = dsp.FIRFilter('NumeratorSource','Input port');
 rightFilter = dsp.FIRFilter('NumeratorSource','Input port');
 
@@ -713,7 +713,7 @@ t = timer('TimerFcn', 'status=false; disp(''...'')',...
                  'StartDelay',5);
 figure(1)
 
-for i = 1:20 %trials
+for i = 1:100 %trials
     
     i
     

@@ -13,7 +13,7 @@ T = -(Full_Duration/2):dt:Full_Duration/2; %vector of time stamps for full durat
 
 
 %Stimulus Parameters
-Frequency_bank = [200 278 350 397 440 499 569 650 788 845 875 949 1000 1100 ]; %In neuroscience experiment will be based on the BF for the neural population,
+Frequency_bank = [285 350 397 440 499 569 650 788 845 875 949 1000 1100 ]; %In NHP experiment will be based on the BF for the neural population,
                      %for now just setting to a decent range of random
                      %selected frequencies.  Later can do something more
                      %elborate.
@@ -103,5 +103,7 @@ if Frequency_motion
     
     Stim.MC = max_change;
     Stim.amp = 0.05;
+    
+    
 end
 
