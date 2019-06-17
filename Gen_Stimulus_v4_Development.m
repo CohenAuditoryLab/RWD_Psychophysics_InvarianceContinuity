@@ -228,5 +228,5 @@ index = 1;
 %Loop_Duration = 5; %in minutes
 %Loop = repmat(Stim{index}.Full_stim,1,ceil(60*Loop_Duration)/Full_Duration);
 
-audiowrite([name '.wav'], Stim{index}.Full_Stim, Stim{1}.Fs,'BitsPerSample',24) %first save the loop
+audiowrite([name '.wav'], Stim{index}.Full_stim, Stim{1}.Fs,'BitsPerSample',24) %first save the loop
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%^^^Change to Loop if doing loops%%%***********
