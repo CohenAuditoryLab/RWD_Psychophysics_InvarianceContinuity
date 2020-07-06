@@ -43,15 +43,15 @@ def PCA(arr):
 	m = np.mean(arr,1)
 	arr = arr-m[:,None]
 	cov = np.cov(arr)
-	cov = cov + np.identity(cov.shape[0]) *0.0000001
+	cov = cov + np.identity(cov.shape[0]) *0.0000001 #2020-06-13 I guess this ensures that there is some positive variance for all terms...
 	U, S, Vh = np.linalg.svd(cov) 
-	where = np.argwhere(S > 0.00000011)
-	siz = where.size
+	where = np.argwhere(S > 0.00000011) #This line is going to make figuring out he filters weird...but essentially getting rid of all eigenvectors below this threshold.
+	siz = where.size #Since eignvectors are ordered can return this to figure out reverse transform
 	S = S[:siz]
 	S = 1/np.sqrt(S)
 	S = S * np.identity(S.size)
 	SS = np.matmul(S,U.T[0:siz,:])
-	xwhite = np.matmul(SS,arr)
+	xwhite = np.matmul(SS,arr) #given this line it looks like SS is the matrix of principal component analysis
 	return (xwhite,SS)
 
 def PCATest(arr,SS): 
@@ -65,7 +65,7 @@ def weights(arr, retain, mode = 'retain'):
 	dcov = dcov + np.identity(dcov.shape[0]) *0.0000001
 	U, S, Vh = np.linalg.svd(dcov) 
 	if (mode ==	 'retain'):
-		U = U[:,U.shape[1]-retain:U.shape[1]]
+		U = U[:,U.shape[1]-retain:U.shape[1]] #take only 20 SF (i.e. retain = 20) 2020-06-13 unclear why don't scale U by single values (i.e. S)...
 	return U
 
 def SFAquad_WithoutTools(arr,j):

@@ -65,7 +65,7 @@ def gamma_transform_list(data, filterbank):
 def plot_input(inp, name):
     plt.figure(figsize=(12,3))
     plt.title(name)
-    plt.imshow(inp, aspect = 'auto', origin = 'lower')
+    plt.imshow(inp, aspect = 'auto')
     plt.show()
     return
 
@@ -113,8 +113,8 @@ def getSF(data,name, mode = 'quad', retain = 20, transform = False):
     if (mode == 'quad'):
         data_normalized = s.quadExpand(data_normalized)
     print(name, ': Nonlinear Expansion Complete...')
-    
-    (data_Sphered,data_SS) = s.PCA(data_normalized) #note: data_SS is the matrix of the used PCs of the data.
+    #Open question: why do we sphere after expanding instead of before?  Partial answer this is what the original implementation in the first paper using SFA does.
+    (data_Sphered,data_SS) = s.PCA(data_normalized)
     print(name, ': Sphering Complete...')
     
     weights = s.weights(data_Sphered, retain)    
