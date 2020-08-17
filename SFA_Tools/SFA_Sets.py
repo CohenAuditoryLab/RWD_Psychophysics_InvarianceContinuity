@@ -29,7 +29,7 @@ def quadExpand(arr):
 	l = int(s[0]*(s[0]+1)/2)
 	out = np.zeros((l,s[1]))
 	count = s[0]
-	out[0:s[0],:] = arr
+	out[0:s[0],:] = arr #set first rows to all of the linear terms as indicated above
 	for i in range(s[0]):
 		for j in range(i):
 			out[count] = np.multiply(arr[i],arr[j])

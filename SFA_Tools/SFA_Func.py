@@ -120,7 +120,7 @@ def getSF(data,name, mode = 'quad', retain = 20, transform = False):
     weights = s.weights(data_Sphered, retain)    
     weights = np.flip(weights.T,0)
     print(name, ': Weights Determined...')
-    
+    #further note: weights @ data_SS will give you weights in quadexpanded space, the first data.shape[0] rows are the linear terms, the rest are the quad terms.
     if(transform):
         transformed = weights @ data_Sphered
         return transformed, mean, variance, data_SS, weights

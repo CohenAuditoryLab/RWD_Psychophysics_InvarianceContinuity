@@ -5,6 +5,12 @@ Created on Thu Jun 18 12:30:58 2020
 This will need to be edited but for now going to have this be a module that is imported
 And then call the run_SFA function to actually run SFA and return the classification accuracy scores
 
+
+IMPORTANT NOTE: square this file with stuff in single_runSFA before you run the whole batch again!
+
+2020-08-04 squaring now with single_runSFA and deleting all plotting stuff.
+
+
 @author: ronwd
 """
 
@@ -20,17 +26,19 @@ import SFA_Tools.SFA_Sets as s
 from SFA_Tools.SFA_Func import *
 from pathlib import Path, PureWindowsPath
 
-def run_SFA(cur_pair,vocal_foldername,vocal_pair,clutterfoldername, clutterfiletemplate):
+def run_SFA(cur_pair,vocal_foldername,vocal_pair,clutterfoldername, clutterfiletemplate,run_nulls):
 
 
-    
-    snr_values = np.array([0.001, 0.05, 0.5, 1.0, 5, 10, 15, 25, 50]) #snr range, run noiseless as well just separately since that is a toggle in the code
+    #New range 2020-08-04
+    snr_values = np.array([1e-7, 1e-5, 1e-3, .1, 1.0, 10.0, 100.0, 1000.0]) #snr range, run noiseless as well just separately since that is a toggle in the code
     
     #Save SFA classification accuracy and the baseline model score
-    SFA_save_score = np.zeros((20,snr_values.size)) 
-    Baseline_save_score = np.zeros((20,snr_values.size)) 
+    SFA_save_score = np.zeros((5,snr_values.size)) 
+    Baseline_save_score = np.zeros((5,snr_values.size)) 
     
-    for a_round in range(0,20): #rounds are for averaging over for each set of snr (i.e. each snr is done 10 times)
+    #Reduced rounds to 5 for sake of error bars.
+    #Note will need to run some null sets too, add this to batch code and add argument to run_SFA
+    for a_round in range(0,5): #rounds are for averaging over for each set of snr (i.e. each snr is done 10 times)
         print(a_round)
         
         for iteration in range(0,snr_values.size): #iterations for doing each snr
@@ -62,27 +70,37 @@ def run_SFA(cur_pair,vocal_foldername,vocal_pair,clutterfoldername, clutterfilet
              gfb = g.GammatoneFilterbank(order=1, density = 1.0, startband = -21, endband = 21, normfreq = 2200) #sets up parameters for our gammatone filter model of the cochlea.
                                     #Need to look at documentation to figure out exactly how these parameters work , but normfreq at least seems to be central frequency from
                                     #which the rest of the fitler a distributed (accoruding to startband and endband)
-             plot_gammatone_transformed = False #toggle to plot output of gammatone filtered stimulus
-             plot_temporal_filters = False #toggle to plot temporal filters (i.e. temporal component of STRF)
-             plot_temporal_transformed = False #toggle to plot signal after being gammatone filtered and temporally filtered 
+
              down_sample = True #down sample stimulus to help with RAM issues and general dimensionality issues.  I believe mostly reduces resolution of frequency
-             down_sample_pre = 10 #Factor by which to reduce Fs by (e.g. 10 reduces Fs by one order of magnitude) 
-             down_sample_post = 10 #Factor by which to reduce Fs after applying filters 
-                #(2019-09-18 trying removing either of the down sampling and it caused memory errors, meaning I don't fully understand how this is working)
-                ## Parameters for training data
-             num_samples = num_vocals * 5 #note current results on screen were with 15 examples, trying one last go at three vocalization then going to cut loses for tonight and stop #choose how many times you see each stimulus
+             #2020-07-20 probably will turn_sample pre down to 1 since that ends up looking more correct/because I think kilosort can handle it
+             #Also can try to run it with no downsampling since kilosort has more RAM. It will make things run slower but will be more accurate
+             
+             #new down_samples as of 08-04-2020
+             
+             down_sample_pre = 2 #Factor by which to reduce Fs by (e.g. 10 reduces Fs by one order of magnitude) 
+             down_sample_post = 2 #Factor by which to reduce Fs after applying filters 
+               
+                ## Parameters for training data 
+            
+            #new number of presentations, just 1
+             num_samples = num_vocals * 1 #note current results on screen were with 15 examples, trying one last go at three vocalization then going to cut loses for tonight and stop #choose how many times you see each stimulus
              gaps = True #toggle whether there can be gaps between presentation of each stimulus
              apply_noise = True #toggle for applying noise
                 
                 ## Parameters for testing data
-             test_noise = False #Toggle for adding unique noise in test case that is different from training case
-             plot_test = False #plotting toggle for 
-             plot_features = False #plotting toggle for filters found by SFA
+                #leave test noise off for now, add functionality to use fully novel noise later.
                 
-             classifier_baseline = Perceptron(max_iter = 10000, tol = 0.001) #from scikit (presumably) #set up Perceptron classifier
-             classifier_SFA = Perceptron(max_iter = 10000, tol = 0.001)
-             classifier_features = 10 #how many features from SFA  SFA-Perceptron gets to use
+             test_noise = False #Toggle for adding unique noise in test case that is different from training case
+            
+             
+             #2020-08-04 new classifier  as well as using only 5 features.
+             classifier_baseline = LinearSVC(max_iter = 10000000, tol = 0.001) #Perceptron(max_iter = 10000, tol = 0.001) #from scikit (presumably) #set up Perceptron classifier
+             classifier_SFA = LinearSVC(max_iter = 10000000, tol = 0.001) #Perceptron(max_iter = 10000, tol = 0.001)
+     
+             classifier_features = 5 #how many features from SFA  SFA classifer gets to use
              baseline_features = 'all' #how many features the Perceptron by itself gets to use
+     
+             
              
              ## Load in files
         
@@ -147,7 +165,13 @@ def run_SFA(cur_pair,vocal_foldername,vocal_pair,clutterfoldername, clutterfilet
 ## Create Training Dataset
         
              samples = np.random.randint(num_vocals, size = num_samples)
-            
+             even_samples_check = np.sum(samples==1)
+         #Again, note above comment,I think this only really works when only two vocalizations which is the case for now
+             while even_samples_check != np.round(num_samples/num_vocals): #while samples are not even across vocalizations
+               print('Ensuring equal presentation of both vocalizations')
+               samples = np.random.randint(num_vocals, size = num_samples)
+               even_samples_check = np.sum(samples==1)
+             print('Equal presentation of both vocalizations established')
              training_data = None
              initialized = False
              for i in tqdm(samples):
@@ -168,11 +192,7 @@ def run_SFA(cur_pair,vocal_foldername,vocal_pair,clutterfoldername, clutterfilet
                     noise_temporal_transformed = np.hstack((noise_temporal_transformed,noise_temporal_transformed))
                 training_data = training_data + noise_temporal_transformed[:,0:training_data[0].size]
                 print('Applied Noise...')
-    #            plt.figure()
-    #            this_title = 'Training Stream with Noise SNR: ' +  str(signal_to_noise_ratio)
-    #            plt.title(this_title)
-    #            plt.imshow(training_data, aspect = 'auto', origin = 'lower')
-             else:
+
                 print('No Noise Applied...')
             
              print('Ready For SFA')
@@ -199,10 +219,7 @@ def run_SFA(cur_pair,vocal_foldername,vocal_pair,clutterfoldername, clutterfilet
              print('Data arranged...')
             
              if(test_noise):
-                #roll noise by some random amount to make it not the same as training noise
-                min_shift = np.round(.05*testing_data[0].size) #shift at least 5%
-                max_shift = np.round(.5*testing_data[0].size) #at most shift 50%
-                new_noise = np.roll(noise_temporal_transformed[:,0:testing_data[0].size], np.random.randint(min_shift, max_shift))
+                #NOTE: 2020-08-04 rolling old noise is not good enough, add code to add novel noise when ready.
                 testing_data = testing_data + noise_temporal_transformed[:,0:testing_data[0].size]
                 print('Applied Noise...')
              else:
@@ -215,26 +232,31 @@ def run_SFA(cur_pair,vocal_foldername,vocal_pair,clutterfoldername, clutterfilet
             
              test = testSF(testing_data, 'Layer 1', mean, variance, data_SS, weights)
              print('SFA Applied To Test Set')
+            #old code related to adding a second layer.
             #test = np.vstack((test[:,5:], test[:,:-5]))
             #test = testSF(test, 'Layer 2', mean2, variance2, data_SS2, weights2)
             
             ## Plot SFA features
-            
-             labels = getlabels(vocals_temporal_transformed)
+             if run_nulls:
+              labels = np.random.randint(0,2,test.shape[1]) #just put in random labels.
+             else:
+              labels = getlabels(vocals_temporal_transformed)
           
             ## Compare SFA With Baseline For Linear Classification
-                
+            #Updated this 2020-08-04 to use the other clasification test.
+                #split and shuffle data n_split times. Split to train on 1% and test on remainder
+              the_cv = ShuffleSplit(n_splits = 30, test_size = 0.99)
+    
              print('SFA Based Classifier with ', classifier_features, ' features')
-             classifier_SFA.fit(test[:classifier_features].T,labels)
-             print(classifier_SFA.score(test[:classifier_features].T,labels), '\n')
             
-             SFA_save_score[a_round,iteration] = classifier_SFA.score(test[:classifier_features].T,labels) #make this whole code into a for loop and save the scores for a particular SNR here
+             cv_sfa = cross_validate(classifier_SFA, test.T, labels,cv=the_cv)
+            
+             SFA_save_score[a_round,iteration] = np.mean(cv_sfa['test_score']) #take average of all CV folds as the score for that round for that SNR
             
              print('Baseline Classifier with ', baseline_features, ' features')
-             classifier_baseline.fit(testing_data.T,labels)
-             print(classifier_baseline.score(testing_data.T,labels))
+             cv_baseline = cross_validate(classifier_baseline, testing_data.T, labels,cv=the_cv)
              
-             Baseline_save_score[a_round,iteration] = classifier_baseline.score(testing_data.T,labels)
+             Baseline_save_score[a_round,iteration] = np.mean(cv_baseline['test_score']) #same thing for the baseline classifier, this should have consistent performance, but can use the variance present in this as a check on the classifier
         
         
         

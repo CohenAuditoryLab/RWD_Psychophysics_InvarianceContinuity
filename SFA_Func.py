@@ -141,7 +141,7 @@ def testSF(data, name, mean, variance, SS, weights, mode = 'quad'):
     
     return weights @ data_Sphered #this is a post python 3.5 short hand for matrix multiplication
 
-# Get Labels For Data
+# Get Labels For Data #2020-07-09 edit this to foce label diversity
 def getlabels(data):
     labels = None
     initialized = False
